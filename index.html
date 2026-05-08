@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice Studio — PocketFM TTS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+// ── OWNER CONFIG (Mayank's sheet — logs ALL users' jobs) ──────────────────────
+const OWNER_CONFIG = {
+  spreadsheetId: '19YcUmDDAuNAA7zttPqZE-d-R5RtV-fCyqGhHHWtSQ_8',
+  sheetName: 'TTS_Log',
+  // Token refreshes from auth — same Google OAuth token used by PocketFM
+};
+
+// ── AUTH FALLBACK (only used if localStorage has nothing) ──────────────────────
+const PREBAKED = {
+  uid:       "f8daa9878f52b15d65a74cb1d0fa11cd307694a6",
+  usertoken: "ya29.a0AQvPyIPOmX5Op7yo7L-BR9waXr67BF2uSDg4Lspd4VlVLC9QBrQvuQzcvSjSPu3MshtRVFeyPQEigRg7huRZaHmU7Kocr1Mc6ZG0x8DVgQrf9N_sK49OQNZe75moJnnHenaKfwixsMwnx1Iu7J9avzF_SoQX2EZy6eF9cGYC_elQlobZ-YxL5FeUPgPgj6TP1ZjgBZ4aCgYKAcQSARQSFQHGX2MiRr-CiaeWdaB41l--CALqLQ0206",
+  username:  "Mayank Mandal",
+  useremail: "con-mayank.mandal@pocketfm.com"
+};
+</script>
+<style>
+:root{
+  --bg:#0a0a0f;--sf:#111118;--sf2:#18181f;--sf3:#1e1e28;
+  --b:#2a2a38;--b2:#3a3a50;
+  --ac:#7c6dfa;--ac2:#a594ff;--ag:rgba(124,109,250,.2);
+  --gn:#2dd98a;--gnd:rgba(45,217,138,.15);
+  --rd:#ff5757;--rdd:rgba(255,87,87,.12);
+  --yw:#ffd166;--ywd:rgba(255,209,102,.12);
+  --tx:#e8e8f0;--tx2:#9090a8;--tx3:#5a5a72;
+  --mo:'DM Mono',monospace;--sa:'Syne',sans-serif;--r:10px;--r2:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--tx);font-family:var(--sa);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");}
+.shell{display:flex;min-height:100vh;position:relative;z-index:1;}
+
+/* SIDEBAR */
+.sb{width:224px;flex-shrink:0;background:var(--sf);border-right:1px solid var(--b);padding:26px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.logo{padding:0 20px 20px;border-bottom:1px solid var(--b);margin-bottom:14px;}
+.logo-t{font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ac2);}
+.logo-s{font-size:11px;color:var(--tx3);margin-top:2px;font-family:var(--mo);}
+.ni{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);border-left:2px solid transparent;transition:all .15s;user-select:none;}
+.ni:hover{color:var(--tx);background:var(--sf2);}
+.ni.on{color:var(--ac2);border-left-color:var(--ac);background:rgba(124,109,250,.08);}
+.ub{margin-top:auto;padding:14px 20px;border-top:1px solid var(--b);display:flex;align-items:center;gap:10px;}
+.av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--ac),#a594ff);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+.un{font-size:12px;font-weight:600;color:var(--tx);}
+.ue{font-size:10px;color:var(--tx3);font-family:var(--mo);}
+
+/* MAIN */
+.main{flex:1;padding:28px 32px;max-width:960px;}
+.page{display:none;}.page.active{display:block;}
+.ph{margin-bottom:20px;}
+.pt{font-size:25px;font-weight:800;letter-spacing:-.02em;}
+.ps{font-size:13px;color:var(--tx2);margin-top:3px;}
+
+/* STATUS ROW */
+.srow{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.spill{display:flex;align-items:center;gap:8px;background:var(--sf);border:1px solid var(--b);border-radius:8px;padding:8px 14px;font-size:12px;font-family:var(--mo);flex:1;min-width:180px;}
+.spill.ok{border-color:var(--gn);background:var(--gnd);}
+.spill.warn{border-color:var(--yw);background:var(--ywd);}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot.ok{background:var(--gn);}
+.dot.warn{background:var(--yw);}
+
+/* PANELS */
+.panel{background:var(--sf);border-radius:var(--r);padding:14px 18px;margin-bottom:14px;display:none;}
+.panel.show{display:block;}
+.panel-t{font-size:12px;font-weight:700;margin-bottom:8px;}
+.panel-body{font-size:11px;color:var(--tx2);line-height:1.7;}
+.panel-body ol{margin:5px 0 0 16px;}
+.panel-body code{font-family:var(--mo);background:rgba(0,0,0,.5);padding:2px 5px;border-radius:3px;font-size:10px;display:block;word-break:break-all;margin-top:3px;cursor:pointer;}
+.pinp{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
+.pinp input{flex:1;min-width:180px;}
+
+/* CARD */
+.card{background:var(--sf);border:1px solid var(--b);border-radius:var(--r);padding:20px 22px;margin-bottom:13px;}
+.ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);margin-bottom:13px;}
+.field{margin-bottom:13px;}.field:last-child{margin-bottom:0;}
+.fl{font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:5px;letter-spacing:.06em;text-transform:uppercase;}
+.fl .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--tx3);}
+.req{color:var(--rd);}
+textarea,input[type=text],select{width:100%;background:var(--sf2);border:1px solid var(--b);border-radius:var(--r2);color:var(--tx);font-family:var(--mo);font-size:13px;padding:9px 12px;outline:none;transition:border-color .15s,box-shadow .15s;appearance:none;}
+textarea:focus,input[type=text]:focus,select:focus{border-color:var(--ac);box-shadow:0 0 0 2px var(--ag);}
+textarea{resize:vertical;min-height:110px;line-height:1.7;}
+.ctr{font-size:11px;color:var(--tx3);text-align:right;margin-top:3px;font-family:var(--mo);}
+
+/* FILE UPLOAD */
+.uz{background:var(--sf2);border:1.5px dashed var(--b2);border-radius:var(--r2);padding:20px;text-align:center;cursor:pointer;transition:all .15s;position:relative;}
+.uz:hover,.uz.drag{border-color:var(--ac);background:rgba(124,109,250,.04);}
+.uz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.uz-t{font-size:13px;color:var(--tx2);}.uz-t strong{color:var(--ac2);}
+.uz-s{font-size:11px;color:var(--tx3);margin-top:3px;font-family:var(--mo);}
+.finfo{display:none;align-items:center;gap:10px;padding:7px 12px;background:var(--gnd);border-radius:6px;margin-top:8px;}
+.finfo.show{display:flex;}
+.fname{font-size:12px;font-family:var(--mo);color:var(--gn);flex:1;}
+
+/* TWO COL */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:620px){.two{grid-template-columns:1fr;}}
+
+/* VOICE CHIPS */
+.vgrid{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+.vchip{display:flex;align-items:center;gap:8px;background:var(--sf2);border:1px solid var(--b);border-radius:8px;padding:8px 12px;cursor:pointer;transition:all .14s;font-family:var(--mo);}
+.vchip:hover{border-color:var(--ac);}
+.vchip.on{background:rgba(124,109,250,.18);border-color:var(--ac);}
+.vchip-check{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--b2);flex-shrink:0;transition:all .12s;}
+.vchip.on .vchip-check{background:var(--ac);border-color:var(--ac);display:flex;align-items:center;justify-content:center;}
+.vchip.on .vchip-check::after{content:'✓';font-size:8px;color:#fff;font-weight:700;}
+.vchip-name{font-size:12px;font-weight:600;color:var(--tx);}
+.vchip.on .vchip-name{color:var(--ac2);}
+.vchip-note{font-size:10px;color:var(--tx3);}
+.vchip.on .vchip-note{color:var(--ac2);opacity:.7;}
+.vcl{font-size:11px;color:var(--tx3);font-family:var(--mo);margin-top:7px;}
+.va{font-size:11px;color:var(--ac2);cursor:pointer;margin-left:8px;font-family:var(--mo);}
+.va:hover{text-decoration:underline;}
+
+/* MODEL BADGE */
+.model-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(124,109,250,.15);border:1px solid var(--ac);border-radius:6px;padding:6px 14px;font-family:var(--mo);font-size:12px;color:var(--ac2);font-weight:600;}
+.model-badge .dot-ac{width:6px;height:6px;border-radius:50%;background:var(--ac2);}
+
+/* SLIDERS */
+.slf{margin-bottom:14px;}
+.slh{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.sll{font-size:12px;color:var(--tx2);font-weight:500;}
+.sln{font-size:10px;color:var(--tx3);margin-left:5px;}
+.slv{font-size:12px;font-family:var(--mo);color:var(--ac2);background:rgba(124,109,250,.12);padding:1px 8px;border-radius:4px;min-width:40px;text-align:center;}
+.slr{display:flex;align-items:center;gap:8px;}
+.slmin,.slmax{font-size:10px;color:var(--tx3);font-family:var(--mo);flex-shrink:0;min-width:26px;}
+.slmax{text-align:right;}
+input[type=range]{flex:1;-webkit-appearance:none;height:3px;border-radius:2px;outline:none;cursor:pointer;background:linear-gradient(to right,var(--ac) 0%,var(--ac) var(--pct,50%),var(--b2) var(--pct,50%),var(--b2) 100%);}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--ac2);border:2px solid var(--bg);box-shadow:0 0 6px var(--ag);cursor:pointer;}
+
+/* TOGGLE ROWS */
+.trow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--b);}
+.trow:last-child{border-bottom:none;padding-bottom:0;}
+.trow-l{font-size:13px;color:var(--tx);}
+/* checkbox */
+.cb{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--b2);background:var(--sf2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;}
+.cb.on{background:var(--ac);border-color:var(--ac);}
+.cb.on::after{content:'✓';font-size:11px;color:#fff;font-weight:700;}
+/* switch */
+.sw{position:relative;width:42px;height:22px;flex-shrink:0;}
+.sw input{opacity:0;width:0;height:0;}
+.sw-t{position:absolute;inset:0;border-radius:11px;background:var(--sf3);border:1px solid var(--b2);cursor:pointer;transition:background .2s;}
+.sw input:checked+.sw-t{background:var(--ac);border-color:var(--ac);}
+.sw-k{position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--tx3);transition:transform .2s,background .2s;pointer-events:none;}
+.sw input:checked~.sw-k{transform:translateX(20px);background:#fff;}
+
+/* TAGS */
+.tw{display:flex;flex-wrap:wrap;gap:5px;align-items:center;background:var(--sf2);border:1px solid var(--b);border-radius:var(--r2);padding:6px 10px;cursor:text;min-height:40px;}
+.tw:focus-within{border-color:var(--ac);box-shadow:0 0 0 2px var(--ag);}
+.tp{background:rgba(124,109,250,.18);color:var(--ac2);border-radius:4px;padding:2px 8px;font-size:11px;font-family:var(--mo);display:flex;align-items:center;gap:4px;}
+.tp button{background:none;border:none;color:var(--ac2);cursor:pointer;font-size:13px;line-height:1;padding:0;}
+#tin{background:none;border:none;color:var(--tx);font-family:var(--mo);font-size:12px;outline:none;flex:1;min-width:100px;}
+.tqchip{padding:3px 11px;border-radius:12px;font-size:11px;font-family:var(--mo);cursor:pointer;border:1px solid var(--b);color:var(--tx3);background:var(--sf2);transition:all .12s;display:inline-block;margin:2px;}
+.tqchip:hover{border-color:var(--ac);color:var(--ac2);}
+.tqchip.on{border-color:var(--ac2);color:var(--ac2);background:rgba(165,148,255,.1);}
+
+/* LAUNCH BOX */
+.lbox{background:linear-gradient(135deg,rgba(124,109,250,.1),rgba(165,148,255,.05));border:1px solid var(--ac);border-radius:var(--r);padding:18px 22px;margin-bottom:13px;}
+.lbox-t{font-size:13px;font-weight:700;color:var(--ac2);margin-bottom:6px;}
+.lbox-d{font-size:12px;color:var(--tx2);line-height:1.6;margin-bottom:12px;}
+.lv-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px;}
+.lvc{font-size:11px;font-family:var(--mo);background:var(--sf2);border:1px solid var(--b);border-radius:4px;padding:3px 9px;color:var(--tx2);transition:all .2s;}
+.lvc.active{border-color:var(--ac);color:var(--ac2);}
+.lvc.done{border-color:var(--gn);color:var(--gn);background:var(--gnd);}
+.lbtn{display:inline-flex;align-items:center;gap:8px;background:var(--ac);color:#fff;padding:11px 22px;border-radius:var(--r2);font-family:var(--sa);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s;box-shadow:0 0 20px rgba(124,109,250,.35);}
+.lbtn:hover{background:var(--ac2);transform:translateY(-1px);}
+.lbtn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r2);font-family:var(--sa);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.btn-p{background:var(--ac);color:#fff;box-shadow:0 0 18px rgba(124,109,250,.3);}
+.btn-p:hover{background:var(--ac2);transform:translateY(-1px);}
+.btn-p:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-g{background:transparent;color:var(--tx2);border:1px solid var(--b);}
+.btn-g:hover{border-color:var(--b2);color:var(--tx);}
+.btn-sm{padding:5px 12px;font-size:11px;}
+.div{height:1px;background:var(--b);margin:12px 0;}
+
+/* MY VOICES TOOLBAR */
+.vtool{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:11px;}
+.fp{padding:5px 13px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--b);color:var(--tx2);background:var(--sf2);transition:all .12s;font-family:var(--mo);}
+.fp.on{border-color:var(--ac);color:var(--ac2);background:rgba(124,109,250,.1);}
+.sbox{background:var(--sf2);border:1px solid var(--b);border-radius:20px;padding:5px 13px;color:var(--tx);font-size:12px;font-family:var(--mo);outline:none;width:155px;}
+.sbox:focus{border-color:var(--ac);}
+.tidbox{background:var(--sf2);border:1px solid var(--b);border-radius:6px;padding:5px 12px;color:var(--tx);font-family:var(--mo);font-size:12px;outline:none;width:180px;}
+.tidbox:focus{border-color:var(--ac);}
+.tagsbox{background:var(--sf2);border:1px solid var(--b);border-radius:20px;padding:5px 13px;color:var(--tx);font-size:12px;font-family:var(--mo);outline:none;width:145px;}
+.tagsbox:focus{border-color:var(--ac2);}
+
+/* SOURCE TOGGLE — Mine / All */
+.src-tog{display:flex;gap:0;border:1px solid var(--b);border-radius:6px;overflow:hidden;}
+.src-btn{padding:5px 12px;font-size:11px;font-family:var(--mo);cursor:pointer;background:var(--sf2);color:var(--tx2);border:none;transition:all .12s;}
+.src-btn.on{background:var(--ac);color:#fff;}
+
+/* TAG FILTER ROW */
+.tfr{display:none;flex-wrap:wrap;gap:5px;margin-bottom:11px;align-items:center;padding:10px 14px;background:var(--sf);border:1px solid var(--b);border-radius:var(--r2);}
+.tfc{padding:3px 11px;border-radius:12px;font-size:11px;font-family:var(--mo);cursor:pointer;border:1px solid var(--b);color:var(--tx3);background:var(--sf2);transition:all .12s;}
+.tfc.on{border-color:var(--ac2);color:var(--ac2);background:rgba(165,148,255,.1);}
+
+/* JOB CARDS */
+.jg{display:flex;flex-direction:column;gap:9px;}
+.jc{background:var(--sf);border:1px solid var(--b);border-radius:var(--r);padding:14px 18px;animation:si .2s ease;}
+@keyframes si{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
+.jc:hover{border-color:var(--b2);}
+.jc.s-ready{border-left:3px solid var(--gn);}
+.jc.s-processing{border-left:3px solid var(--yw);}
+.jc.s-pending{border-left:3px solid var(--tx3);}
+.jc.s-failed{border-left:3px solid var(--rd);}
+.jt{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.jv{font-size:14px;font-weight:700;}
+.jv small{font-size:10px;color:var(--tx3);font-family:var(--mo);font-weight:400;margin-left:7px;}
+.jm{display:flex;gap:5px;align-items:center;margin-top:4px;flex-wrap:wrap;}
+.mp{font-size:10px;font-family:var(--mo);color:var(--tx3);background:var(--sf2);border-radius:3px;padding:2px 6px;}
+.mt{font-size:10px;font-family:var(--mo);color:var(--ac2);background:rgba(124,109,250,.1);border-radius:3px;padding:2px 6px;cursor:pointer;}
+.mt:hover{background:rgba(124,109,250,.2);}
+.mu{font-size:10px;font-family:var(--mo);color:var(--tx3);border-radius:3px;padding:2px 6px;cursor:pointer;background:rgba(255,255,255,.04);}
+.mu:hover{color:var(--ac2);}
+.vb{font-size:10px;font-family:var(--mo);font-weight:600;padding:2px 6px;border-radius:3px;text-transform:uppercase;background:rgba(165,148,255,.1);color:var(--ac2);letter-spacing:.05em;}
+.sbadge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:4px;font-family:var(--mo);white-space:nowrap;flex-shrink:0;}
+.sbadge.ready{background:var(--gnd);color:var(--gn);}
+.sbadge.processing{background:var(--ywd);color:var(--yw);}
+.sbadge.pending{background:rgba(90,90,114,.2);color:var(--tx3);}
+.sbadge.failed{background:var(--rdd);color:var(--rd);}
+.pu{width:6px;height:6px;border-radius:50%;background:currentColor;animation:p 1.2s ease-in-out infinite;}
+@keyframes p{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.slogged{font-size:9px;font-family:var(--mo);padding:1px 5px;border-radius:3px;background:rgba(45,217,138,.1);color:var(--gn);}
+.other-badge{font-size:9px;font-family:var(--mo);padding:1px 5px;border-radius:3px;background:rgba(255,209,102,.08);color:var(--yw);letter-spacing:.04em;text-transform:uppercase;}
+.own-badge{font-size:9px;font-family:var(--mo);padding:1px 5px;border-radius:3px;background:rgba(45,217,138,.1);color:var(--gn);letter-spacing:.04em;text-transform:uppercase;}
+
+/* AUDIO PLAYER */
+.aplayer{margin-top:12px;background:var(--sf2);border-radius:8px;padding:10px 14px;}
+.ap-top{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.ap-pb{width:32px;height:32px;border-radius:50%;background:var(--ac);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;flex-shrink:0;transition:all .12s;}
+.ap-pb:hover{background:var(--ac2);transform:scale(1.08);}
+.ap-info{flex:1;min-width:0;}
+.ap-title{font-size:12px;font-weight:600;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ap-time{font-size:10px;color:var(--tx3);font-family:var(--mo);margin-top:2px;}
+.ap-acts{display:flex;gap:6px;}
+.ap-prog{position:relative;height:4px;background:var(--b);border-radius:2px;cursor:pointer;margin-bottom:8px;}
+.ap-bar{height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:2px;width:0%;transition:width .1s linear;}
+.ap-dot{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:var(--ac2);transform:translateY(-50%);margin-left:-6px;box-shadow:0 0 6px var(--ag);display:none;pointer-events:none;}
+.ap-prog:hover .ap-dot{display:block;}
+.ap-vol{display:flex;align-items:center;gap:6px;}
+.ap-vol-lbl{font-size:10px;color:var(--tx3);font-family:var(--mo);}
+.ap-vol input{width:80px;}
+.pactions{margin-top:10px;display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+
+/* PLAY ALL BAR */
+#pab{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--sf);border:1px solid var(--ac);border-radius:40px;padding:9px 18px;display:none;align-items:center;gap:12px;box-shadow:0 8px 30px rgba(0,0,0,.5),0 0 36px var(--ag);z-index:100;}
+#pab.show{display:flex;}
+.pai{font-size:12px;color:var(--tx2);}.pai strong{color:var(--ac2);}
+
+/* EMPTY */
+.emp{text-align:center;padding:54px 20px;color:var(--tx3);}
+.emp .ic{font-size:38px;margin-bottom:10px;opacity:.4;}
+.emp p{font-size:14px;}.emp small{font-size:12px;}
+
+/* TOAST */
+#tc{position:fixed;top:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:7px;}
+.toast{background:var(--sf);border:1px solid var(--b);border-radius:8px;padding:11px 14px;font-size:13px;box-shadow:0 4px 18px rgba(0,0,0,.4);animation:ti .2s ease;max-width:320px;display:flex;align-items:center;gap:9px;}
+@keyframes ti{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+.toast.s{border-left:3px solid var(--gn);}
+.toast.e{border-left:3px solid var(--rd);}
+.toast.i{border-left:3px solid var(--ac);}
+.spin{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,.15);border-top-color:#fff;animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--sf);}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
+</style>
+</head>
+<body>
+<div id="tc"></div>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sb">
+  <div class="logo">
+    <div class="logo-t">Voice Studio</div>
+    <div class="logo-s">PocketFM · TTS</div>
+  </div>
+  <nav>
+    <div class="ni on" onclick="nav('gen')" id="nav-gen"><span style="width:16px;text-align:center">✦</span>Generate</div>
+    <div class="ni" onclick="nav('mv')" id="nav-mv">
+      <span style="width:16px;text-align:center">◈</span>My Voices
+      <span id="rbadge" style="margin-left:auto;background:var(--gnd);color:var(--gn);font-size:10px;padding:1px 6px;border-radius:10px;font-family:var(--mo);display:none"></span>
+    </div>
+    <div class="ni" onclick="nav('settings')" id="nav-settings"><span style="width:16px;text-align:center">⚙</span>Settings</div>
+  </nav>
+  <div class="ub">
+    <div class="av" id="uav">M</div>
+    <div>
+      <div class="un" id="uname">—</div>
+      <div class="ue" id="uemail">—</div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- STATUS ROW -->
+<div class="srow">
+  <div class="spill" id="auth-pill">
+    <div class="dot" id="auth-dot"></div>
+    <span id="auth-msg" style="flex:1">Checking auth...</span>
+    <button class="btn btn-g btn-sm" style="padding:3px 8px;font-size:10px" onclick="showPanel('rp')">↻ Token</button>
+  </div>
+  <div class="spill ok" id="sheets-pill">
+    <div class="dot ok"></div>
+    <span style="flex:1;font-family:var(--mo);font-size:12px">📊 Sheet: …Q_8 (TTS_Log)</span>
+    <a href="https://docs.google.com/spreadsheets/d/19YcUmDDAuNAA7zttPqZE-d-R5RtV-fCyqGhHHWtSQ_8/edit" target="_blank" class="btn btn-g btn-sm" style="padding:3px 8px;font-size:10px">↗ Open</a>
+  </div>
+</div>
+
+<!-- TOKEN PANEL -->
+<div class="panel" id="rp" style="border:1px solid var(--yw)">
+  <div class="panel-t" style="color:var(--yw)">↻ Refresh Token</div>
+  <div class="panel-body">Tokens expire ~hourly. Get a fresh one:
+    <ol>
+      <li>Open <a href="https://genai-apps.pocketfm.ai" target="_blank" style="color:var(--ac2)">genai-apps.pocketfm.ai</a> (stay logged in)</li>
+      <li>F12 → Console → click to copy &amp; run:
+        <code onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('Copied!','s'))">copy(localStorage.getItem('usertoken'))</code>
+      </li>
+      <li>Paste new token below:</li>
+    </ol>
+  </div>
+  <div class="pinp">
+    <input type="text" id="new-tok" placeholder="Paste new usertoken...">
+    <button class="btn btn-p btn-sm" onclick="saveToken()">Save</button>
+    <button class="btn btn-g btn-sm" onclick="hidePanel('rp')">✕</button>
+  </div>
+</div>
+
+<!-- ══════════════ GENERATE PAGE ══════════════ -->
+<div id="page-gen" class="page active">
+  <div class="ph">
+    <div class="pt">Generate Voices</div>
+    <div class="ps">Fill form → launch PocketFM per voice → Submit there · all jobs logged to sheet</div>
+  </div>
+
+  <!-- SCRIPT -->
+  <div class="card">
+    <div class="ct">Script</div>
+    <div class="field">
+      <div class="fl">Upload File <span class="sub">(.txt · .doc · .docx · .pdf)</span></div>
+      <div class="uz" id="uz">
+        <input type="file" accept=".txt,.doc,.docx,.pdf" onchange="onFile(this)">
+        <div style="font-size:22px;margin-bottom:4px">📄</div>
+        <div class="uz-t"><strong>Drop file here</strong> or click to browse</div>
+        <div class="uz-s">.txt · .doc · .docx · .pdf</div>
+      </div>
+      <div class="finfo" id="fi">
+        <span style="color:var(--gn)">✓</span>
+        <span class="fname" id="fn">—</span>
+        <button class="btn btn-g btn-sm" onclick="clearFile()">Remove</button>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fl">Or paste script directly</div>
+      <textarea id="scr" placeholder="Paste your VO script here..." oninput="updCtr()"></textarea>
+      <div class="ctr"><span id="cc">0</span> chars · <span id="wc">0</span> words</div>
+    </div>
+  </div>
+
+  <!-- VOICE CONFIG -->
+  <div class="card">
+    <div class="ct">Voice Configuration</div>
+    <div class="two" style="margin-bottom:13px">
+      <div class="field" style="margin-bottom:0">
+        <div class="fl">Language <span class="req">*</span></div>
+        <select id="lang">
+          <option value="en">English</option>
+          <option value="hi">Hindi</option><option value="ta">Tamil</option>
+          <option value="te">Telugu</option><option value="ml">Malayalam</option>
+          <option value="kn">Kannada</option><option value="bn">Bengali</option>
+          <option value="mr">Marathi</option><option value="gu">Gujarati</option>
+          <option value="pa">Punjabi</option><option value="es">Spanish</option>
+          <option value="fr">French</option><option value="de">German</option>
+          <option value="pt">Portuguese</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <div class="fl">Vendor <span class="req">*</span></div>
+        <select id="vendor">
+          <option>Eleven Labs</option><option>Google</option>
+          <option>AWS Polly</option><option>Azure</option><option>OpenAI</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fl">Voice IDs <span class="req">*</span>
+        <span class="va" onclick="selAll()">select all</span>
+        <span class="va" style="color:var(--tx3)" onclick="clrAll()">clear</span>
+      </div>
+      <div class="vgrid" id="vgrid"></div>
+      <div class="vcl" id="vcl">0 voices selected</div>
+    </div>
+  </div>
+
+  <!-- ADDITIONAL SETTINGS — matching screenshot exactly -->
+  <div class="card">
+    <div class="ct" style="cursor:pointer;display:flex;align-items:center;gap:7px;margin-bottom:0" onclick="toggleAS()">
+      <span id="as-arr" style="font-size:10px;color:var(--tx3);transition:transform .15s">▶</span>
+      Additional Settings
+      <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--tx3);font-size:10px">(click to expand)</span>
+    </div>
+    <div id="asb" style="display:none;margin-top:16px">
+
+      <!-- Model — FIXED to eleven_v3 only -->
+      <div class="field">
+        <div class="fl">Model ID</div>
+        <div class="model-badge">
+          <div class="dot-ac"></div>
+          eleven_v3
+          <span style="font-size:10px;color:var(--tx3);font-weight:400;margin-left:4px">· fixed</span>
+        </div>
+      </div>
+
+      <!-- Speed 0.70–1.20 -->
+      <div class="slf">
+        <div class="slh">
+          <span class="sll">Speed</span>
+          <span class="slv" id="slv-sp">1.00</span>
+        </div>
+        <div class="slr">
+          <span class="slmin">0.70</span>
+          <input type="range" id="sl-sp" min="70" max="120" value="100" oninput="slUpd('sp',this.value,'slv-sp',true)">
+          <span class="slmax">1.20</span>
+        </div>
+      </div>
+
+      <!-- Stability 0–100 -->
+      <div class="slf">
+        <div class="slh">
+          <span class="sll">Stability <span class="sln">(values under 30 would lead to instability , For V3 the values can be 0, 50 and 100)</span></span>
+          <span class="slv" id="slv-st">50</span>
+        </div>
+        <div class="slr">
+          <span class="slmin">0</span>
+          <input type="range" id="sl-st" min="0" max="100" value="50" oninput="slUpd('st',this.value,'slv-st',false)">
+          <span class="slmax">100</span>
+        </div>
+      </div>
+
+      <!-- Similarity Boost 0–100 -->
+      <div class="slf">
+        <div class="slh">
+          <span class="sll">Similarity Boost</span>
+          <span class="slv" id="slv-sim">50</span>
+        </div>
+        <div class="slr">
+          <span class="slmin">0</span>
+          <input type="range" id="sl-sim" min="0" max="100" value="50" oninput="slUpd('sim',this.value,'slv-sim',false)">
+          <span class="slmax">100</span>
+        </div>
+      </div>
+
+      <!-- Style Exaggeration 0–100 -->
+      <div class="slf" style="margin-bottom:4px">
+        <div class="slh">
+          <span class="sll">Style Exaggeration <span class="sln">(values over 50 would lead to instability)</span></span>
+          <span class="slv" id="slv-sty">50</span>
+        </div>
+        <div class="slr">
+          <span class="slmin">0</span>
+          <input type="range" id="sl-sty" min="0" max="100" value="50" oninput="slUpd('sty',this.value,'slv-sty',false)">
+          <span class="slmax">100</span>
+        </div>
+      </div>
+
+      <div class="div"></div>
+
+      <!-- Enhance Audio (toggle switch — ON by default) -->
+      <div class="trow">
+        <span class="trow-l">Enhance Audio</span>
+        <label class="sw">
+          <input type="checkbox" id="sw-enhance" checked>
+          <div class="sw-t"></div>
+          <div class="sw-k"></div>
+        </label>
+      </div>
+
+      <!-- Overlay Dynamic BGM (checkbox) -->
+      <div class="trow">
+        <span class="trow-l">Overlay Dynamic BGM</span>
+        <div class="cb" id="cb-bgm" onclick="this.classList.toggle('on')"></div>
+      </div>
+
+      <!-- Overlay SFX (checkbox) -->
+      <div class="trow">
+        <span class="trow-l">Overlay SFX</span>
+        <div class="cb" id="cb-sfx" onclick="this.classList.toggle('on')"></div>
+      </div>
+
+      <!-- Is Background music required? (toggle switch) -->
+      <div class="trow">
+        <span class="trow-l">Is Background music required?</span>
+        <label class="sw">
+          <input type="checkbox" id="sw-bg">
+          <div class="sw-t"></div>
+          <div class="sw-k"></div>
+        </label>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TAGS -->
+  <div class="card">
+    <div class="ct">Tags <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--tx3)">(optional)</span></div>
+    <div class="tw" id="tw" onclick="document.getElementById('tin').focus()">
+      <input type="text" id="tin" placeholder="Type tag then press Enter or comma..." onkeydown="onTKey(event)" oninput="onTType(event)">
+    </div>
+    <div id="tqs" style="margin-top:10px;display:none">
+      <div style="font-size:11px;color:var(--tx2);font-weight:600;margin-bottom:5px">🔍 Previous tags:</div>
+      <div id="tqs-row"></div>
+    </div>
+  </div>
+
+  <!-- LAUNCH BOX -->
+  <div class="lbox" id="lbox" style="display:none">
+    <div class="lbox-t">🚀 Ready — <span id="lcount"></span></div>
+    <div class="lbox-d">Click <strong>Launch All</strong> → PocketFM opens for each voice. Select voice, paste script, click Submit there. Come back → <strong>Next Voice</strong>.</div>
+    <div class="lv-chips" id="lv-chips"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+      <button class="lbtn" id="lbtn" onclick="launchAll()">🚀 Launch All on PocketFM</button>
+      <button class="btn btn-g btn-sm" id="lnext" style="display:none" onclick="launchNext()">→ Next Voice</button>
+      <span id="lstatus" style="font-size:11px;color:var(--tx3);font-family:var(--mo)"></span>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:40px">
+    <button class="btn btn-p" id="prepbtn" onclick="prepLaunch()"><span id="preplbl">▶ Prepare Launch</span></button>
+    <span id="prepinfo" style="font-size:12px;color:var(--tx3);font-family:var(--mo)"></span>
+  </div>
+</div>
+
+<!-- ══════════════ MY VOICES PAGE ══════════════ -->
+<div id="page-mv" class="page">
+  <div class="ph">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div class="pt">My Voices</div>
+        <div class="ps">All jobs tracked · audio player · click tag to filter · auto-polls every 30s</div>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn btn-g btn-sm" onclick="playAll()">▶ Play All</button>
+        <a href="https://docs.google.com/spreadsheets/d/19YcUmDDAuNAA7zttPqZE-d-R5RtV-fCyqGhHHWtSQ_8/edit" target="_blank" class="btn btn-g btn-sm">📊 Sheet</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="vtool">
+    <button class="fp on" onclick="setF('all',this)">All</button>
+    <button class="fp" onclick="setF('ready',this)">✓ Ready</button>
+    <button class="fp" onclick="setF('processing',this)">⟳ Processing</button>
+    <button class="fp" onclick="setF('pending',this)">· Pending</button>
+    <button class="fp" onclick="setF('failed',this)">✕ Failed</button>
+    <input class="sbox" id="vsearch" placeholder="🔍 name / voice..." oninput="renderJobs()">
+    <input class="tidbox" id="tsearch" placeholder="🔎 Task ID..." oninput="renderJobs()">
+    <input class="tagsbox" id="tagsearch" placeholder="🏷 tag..." oninput="onTagSearch()">
+    <!-- Mine / All users toggle -->
+    <div class="src-tog">
+      <button class="src-btn on" id="src-mine" onclick="setSrc('mine')">Mine</button>
+      <button class="src-btn" id="src-all" onclick="setSrc('all')">All Users</button>
+    </div>
+  </div>
+
+  <!-- TAG CHIPS -->
+  <div class="tfr" id="tfr"></div>
+
+  <!-- JOB GRID -->
+  <div class="jg" id="jg">
+    <div class="emp"><div class="ic">🎙️</div><p>No voices yet</p><small>Launch jobs on the Generate page</small></div>
+  </div>
+</div>
+
+<!-- ══════════════ SETTINGS PAGE ══════════════ -->
+<div id="page-settings" class="page">
+  <div class="ph"><div class="pt">Settings</div></div>
+  <div class="card">
+    <div class="ct">PocketFM Auth</div>
+    <div class="field"><div class="fl">UID <span class="sub">(permanent)</span></div><input type="text" id="set-uid" placeholder="uid"></div>
+    <div class="field"><div class="fl">User Token <span class="sub">(expires ~hourly)</span></div><input type="text" id="set-tok" placeholder="usertoken"></div>
+    <button class="btn btn-p btn-sm" style="margin-top:8px" onclick="saveSettingsAuth()">Save Auth</button>
+  </div>
+  <div class="card">
+    <div class="ct">Google Sheets</div>
+    <p style="font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.6">
+      Pre-configured to log all jobs to:<br>
+      <a href="https://docs.google.com/spreadsheets/d/19YcUmDDAuNAA7zttPqZE-d-R5RtV-fCyqGhHHWtSQ_8/edit" target="_blank" style="color:var(--ac2);font-family:var(--mo);font-size:11px">19YcUmDDAuNAA7zttPqZE-d-R5RtV-fCyqGhHHWtSQ_8</a>
+    </p>
+    <button class="btn btn-g btn-sm" onclick="testSheet()">Test Connection</button>
+    <span id="sheet-test-msg" style="font-size:11px;font-family:var(--mo);color:var(--tx3);margin-left:10px"></span>
+  </div>
+  <div class="card">
+    <div class="ct">Data Export</div>
+    <button class="btn btn-g btn-sm" onclick="exportJobs()">⬇ Export All Jobs JSON</button>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- PLAY ALL BAR -->
+<div id="pab">
+  <button class="ap-pb" onclick="togglePA()" id="patog" style="width:28px;height:28px;font-size:10px">▶</button>
+  <div class="pai"><strong id="pa-v">—</strong><div>Playing <span id="pa-i">0</span>/<span id="pa-t">0</span></div></div>
+  <div style="width:100px;height:3px;background:var(--b);border-radius:2px"><div id="pa-p" style="height:100%;background:var(--ac);border-radius:2px;width:0%"></div></div>
+  <button class="btn btn-g btn-sm" onclick="stopPA()">■ Stop</button>
+</div>
+
+<script>
+/* ══ VOICE LIST ══ */
+const VOICES=[
+  {id:'15CVCzDByBinCIoCblXo',name:'Lucan',        note:'',                             g:'M'},
+  {id:'NNl6r8mD7vthiJatiJt1',name:'Bradford',     note:'',                             g:'M'},
+  {id:'EozfaQ3ZX0esAp1cW5nG',name:'David',        note:'Conversational Podcaster',     g:'M'},
+  {id:'6IwYbsNENZgAB1dtBZDp',name:'Jett',         note:'Gritty & Spunky Young Hero',   g:'M'},
+  {id:'5PojXENXv1b21rxCyOtD',name:'Asher',        note:'',                             g:'M'},
+  {id:'qAZH0aMXY8tw1QufPN0D',name:'Flint',        note:'',                             g:'M'},
+  {id:'iB0m5bo5Htdz0t9yE0xq',name:'Jax Meridian', note:'',                             g:'M'},
+  {id:'alFofuDn3cOwyoz1i44T',name:'Dallin',       note:'',                             g:'M'},
+  {id:'4QLC5fepxZkYmdD2IGRU',name:'Mathew',       note:'',                             g:'M'},
+  {id:'4u5cJuSmHP9d6YRolsOu',name:'J.',           note:'',                             g:'M'},
+  {id:'Sq93GQT4X1lKDXsQcixO',name:'Felix',        note:'Warm, positive & contemporary',g:'M'},
+  {id:'c8GqgOMlDjKmhWVDfhvI',name:'Kennedy',      note:'',                             g:'F'},
+  {id:'adZ555uScdE4bhVHqphz',name:'Marilyn',      note:'Confident',                    g:'F'},
+  {id:'cgSgspJ2msm6clMCkdW9',name:'Jessica',      note:'Young and popular',            g:'F'},
+  {id:'5l5f8iK3YPeGga21rQIX',name:'Adeline',      note:'Feminine & Conversational',    g:'F'},
+  {id:'Y01WIZ9pSsjKCJUyRwEb',name:'Desmonda',     note:'',                             g:'F'},
+  {id:'0BWWzeG6GPCj5JbdVCAf',name:'Jillian Kuhl', note:'',                             g:'F'},
+  {id:'M0w7phiFNVJNgFnDjIkL',name:'Mary',         note:'',                             g:'F'},
+  {id:'ruQ1Red7YP6A26unCatc',name:'Katie',        note:'',                             g:'F'},
+  {id:'ImnfuV8oxhB7ya99oJfc',name:'Helen',        note:'',                             g:'F'},
+  {id:'6YHXakmPunPhAPxnMkZ4',name:'Tass',         note:'',                             g:'F'},
+  {id:'pFZP5JQG7iQjIQuC4Bku',name:'Lily',         note:'',                             g:'F'},
+];
+
+/* ══ CONSTANTS ══ */
+const CDN='https://dbj64m8271a9g.cloudfront.net';
+const PFURL='https://genai-apps.pocketfm.ai/Text_To_Speech';
+const AUTHKEY='vs_auth';
+// Two storage keys: per-user jobs + shared (all users) jobs
+const myJobsKey=()=>'vs_jobs_'+(auth.uid||'local');
+const SHARED_KEY='vs_jobs_shared_global'; // ALL users' jobs — never purged
+// Sheet config — pre-baked, no setup needed
+const SHEET_ID='19YcUmDDAuNAA7zttPqZE-d-R5RtV-fCyqGhHHWtSQ_8';
+const SHEET_NAME='TTS_Log';
+
+/* ══ STATE ══ */
+let auth={}, jobs=[], fTags=[], selV=new Set(), aTags=new Set();
+let sFilter='all', viewSrc='mine', pollTmr=null;
+let paAudio=null, paQ=[], paIdx=0;
+let fileText=null, launchQ=[], launchIdx=0;
+const audioInstances={};
+
+/* ══ INIT ══ */
+window.addEventListener('DOMContentLoaded',()=>{
+  initAuth();
+  loadJobs();
+  renderVoiceGrid();
+  initSliders();
+  renderTagQS();
+  startPoll();
+  ensureSheetHeaders(); // silently set up sheet on load
+  const uz=document.getElementById('uz');
+  uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag');});
+  uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
+  uz.addEventListener('drop',e=>{
+    e.preventDefault();uz.classList.remove('drag');
+    const f=e.dataTransfer.files[0];
+    if(f){const dt=new DataTransfer();dt.items.add(f);uz.querySelector('input').files=dt.files;onFile(uz.querySelector('input'));}
+  });
+});
+
+/* ══ AUTH ══ */
+function initAuth(){
+  const saved=JSON.parse(localStorage.getItem(AUTHKEY)||'null');
+  auth=saved?.uid?saved:PREBAKED;
+  if(!saved?.uid) localStorage.setItem(AUTHKEY,JSON.stringify(auth));
+  updateAuthUI();
+  document.getElementById('set-uid').value=auth.uid||'';
+  document.getElementById('set-tok').value=auth.usertoken||'';
+}
+function updateAuthUI(){
+  const ok=!!auth.uid;
+  document.getElementById('auth-pill').className='spill '+(ok?'ok':'warn');
+  document.getElementById('auth-dot').className='dot '+(ok?'ok':'warn');
+  document.getElementById('auth-msg').textContent=ok?`✓ ${auth.username||auth.useremail}`:'Not authenticated';
+  document.getElementById('uname').textContent=auth.username||'User';
+  document.getElementById('uemail').textContent=auth.useremail||'';
+  document.getElementById('uav').textContent=(auth.username||'U')[0].toUpperCase();
+}
+function showPanel(id){document.getElementById(id).classList.add('show');}
+function hidePanel(id){document.getElementById(id).classList.remove('show');}
+function saveToken(){
+  const t=document.getElementById('new-tok').value.trim();
+  if(!t){toast('Paste your token','e');return;}
+  auth.usertoken=t;
+  localStorage.setItem(AUTHKEY,JSON.stringify(auth));
+  hidePanel('rp');updateAuthUI();toast('✓ Token updated','s');
+}
+function saveSettingsAuth(){
+  const u=document.getElementById('set-uid').value.trim(),t=document.getElementById('set-tok').value.trim();
+  if(!u||!t){toast('Enter uid and token','e');return;}
+  auth={...auth,uid:u,usertoken:t};
+  localStorage.setItem(AUTHKEY,JSON.stringify(auth));updateAuthUI();toast('✓ Auth saved','s');
+}
+
+/* ══ NAV ══ */
+function nav(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('on');
+  if(id==='mv'){renderTFR();renderJobs();}
+  if(id==='gen'){renderTagQS();}
+}
+
+/* ══ FILE ══ */
+function onFile(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{fileText=e.target.result;document.getElementById('fn').textContent=f.name;document.getElementById('fi').classList.add('show');document.getElementById('scr').value=fileText;updCtr();toast('✓ File loaded','s');};
+  r.readAsText(f);
+}
+function clearFile(){fileText=null;document.getElementById('fi').classList.remove('show');document.getElementById('scr').value='';updCtr();}
+function updCtr(){const t=document.getElementById('scr').value;document.getElementById('cc').textContent=t.length.toLocaleString();document.getElementById('wc').textContent=t.trim()?t.trim().split(/\s+/).length.toLocaleString():'0';}
+
+/* ══ VOICE GRID ══ */
+function renderVoiceGrid(){
+  document.getElementById('vgrid').innerHTML=VOICES.map(v=>`
+    <div class="vchip ${selV.has(v.id)?'on':''}" onclick="toggleV('${v.id}')">
+      <div class="vchip-check"></div>
+      <div>
+        <div class="vchip-name">${v.name}</div>
+        <div class="vchip-note">${v.note||((v.g==='M'?'♂':'♀'))} · ${v.id.slice(0,8)}…</div>
+      </div>
+    </div>`).join('');
+  updVCL();
+}
+function toggleV(id){selV.has(id)?selV.delete(id):selV.add(id);renderVoiceGrid();}
+function selAll(){VOICES.forEach(v=>selV.add(v.id));renderVoiceGrid();}
+function clrAll(){selV.clear();renderVoiceGrid();}
+function updVCL(){const n=selV.size;document.getElementById('vcl').textContent=n?`${n} voice${n>1?'s':''} selected · ${n} job${n>1?'s':''} will launch`:'0 voices selected';document.getElementById('prepinfo').textContent=n?`→ ${n} job${n>1?'s':''} queued`:'';}
+
+/* ══ ADDITIONAL SETTINGS ══ */
+function toggleAS(){const b=document.getElementById('asb'),a=document.getElementById('as-arr');const o=b.style.display!=='none';b.style.display=o?'none':'block';a.style.transform=o?'rotate(0)':'rotate(90deg)';}
+function initSliders(){slUpd('sp',100,'slv-sp',true);slUpd('st',50,'slv-st',false);slUpd('sim',50,'slv-sim',false);slUpd('sty',50,'slv-sty',false);}
+function slUpd(id,raw,lid,isSp){
+  const el=document.getElementById('sl-'+id);
+  const mn=parseFloat(el.min),mx=parseFloat(el.max);
+  document.getElementById(lid).textContent=isSp?(raw/100).toFixed(2):parseInt(raw);
+  el.style.setProperty('--pct',((raw-mn)/(mx-mn)*100).toFixed(1)+'%');
+}
+function getSettings(){
+  return{
+    modelId:'eleven_v3', // fixed
+    speed:parseFloat((document.getElementById('sl-sp').value/100).toFixed(2)),
+    stability:parseInt(document.getElementById('sl-st').value),
+    similarity_boost:parseInt(document.getElementById('sl-sim').value),
+    style_exaggeration:parseInt(document.getElementById('sl-sty').value),
+    enhance_audio:document.getElementById('sw-enhance').checked,
+    overlay_bgm:document.getElementById('cb-bgm').classList.contains('on'),
+    overlay_sfx:document.getElementById('cb-sfx').classList.contains('on'),
+    bg_music:document.getElementById('sw-bg').checked,
+  };
+}
+
+/* ══ TAGS ══ */
+function onTKey(e){if(e.key==='Enter'||e.key===','){e.preventDefault();addFT(e.target.value.replace(',','').trim());e.target.value='';}}
+function onTType(e){if(e.target.value.endsWith(',')){addFT(e.target.value.slice(0,-1).trim());e.target.value='';}}
+function addFT(v){if(v&&!fTags.includes(v)){fTags.push(v);renderFT();renderTagQS();}}
+function remFT(i){fTags.splice(i,1);renderFT();}
+function renderFT(){const tw=document.getElementById('tw'),ti=document.getElementById('tag-in')||document.getElementById('tin');tw.innerHTML='';fTags.forEach((t,i)=>{const p=document.createElement('div');p.className='tp';p.innerHTML=`${t}<button onclick="remFT(${i})">×</button>`;tw.appendChild(p);});tw.appendChild(document.getElementById('tin'));}
+function getAllTags(){const s=new Set();[...JSON.parse(localStorage.getItem(myJobsKey())||'[]'),...getSharedJobs()].forEach(j=>(j.tags||[]).forEach(t=>{if(t)s.add(t);}));return[...s].sort();}
+function renderTagQS(){const all=getAllTags(),w=document.getElementById('tqs');if(!all.length){w.style.display='none';return;}w.style.display='block';document.getElementById('tqs-row').innerHTML=all.map(t=>`<span class="tqchip ${fTags.includes(t)?'on':''}" onclick="tqT('${t.replace(/'/g,"\\'")}','this')">#${t}</span>`).join('');}
+function tqT(t){fTags.includes(t)?fTags.splice(fTags.indexOf(t),1):fTags.push(t);renderFT();renderTagQS();}
+
+/* ══ LAUNCHER ══ */
+function prepLaunch(){
+  const script=document.getElementById('scr').value.trim();
+  if(!script&&!fileText){toast('Upload or paste a script','e');return;}
+  if(!selV.size){toast('Select at least one voice','e');return;}
+  const finalScript=script||fileText,vendor=document.getElementById('vendor').value,lang=document.getElementById('lang').value,settings=getSettings();
+  launchQ=[...selV].map(vid=>{const v=VOICES.find(x=>x.id===vid)||{name:vid};return{vid,vname:v.name,vendor,lang,settings,script:finalScript,tags:[...fTags]};});
+  launchIdx=0;
+  document.getElementById('lbox').style.display='block';
+  document.getElementById('lcount').textContent=`${launchQ.length} voice${launchQ.length>1?'s':''}`;
+  document.getElementById('lv-chips').innerHTML=launchQ.map((l,i)=>`<span class="lvc" id="lvc-${i}">${l.vname}</span>`).join('');
+  document.getElementById('lbtn').style.display='inline-flex';
+  document.getElementById('lnext').style.display='none';
+  document.getElementById('lstatus').textContent='';
+  toast(`✓ ${launchQ.length} voices queued`,'s');
+}
+async function launchAll(){document.getElementById('lbtn').style.display='none';document.getElementById('lnext').style.display='inline-flex';launchIdx=0;await launchOne(0);}
+async function launchNext(){launchIdx++;if(launchIdx>=launchQ.length){document.getElementById('lstatus').textContent=`✓ All ${launchQ.length} launched!`;document.getElementById('lnext').style.display='none';toast(`✓ All launched`,'s');return;}await launchOne(launchIdx);}
+async function launchOne(idx){
+  const item=launchQ[idx];
+  const jid='j_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
+  const job={
+    id:jid,taskId:null,
+    uid:auth.uid||'local',
+    userName:auth.username||'Unknown',
+    userEmail:auth.useremail||'',
+    voiceId:item.vid,voiceName:item.vname,
+    vendor:item.vendor,lang:item.lang,
+    type:'Adhoc Requests',
+    script:item.script.slice(0,280)+(item.script.length>280?'…':''),
+    tags:item.tags,settings:item.settings,
+    status:'pending',outputUrl:null,
+    sheetLogged:false,
+    launchedAt:new Date().toISOString(),
+    createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),
+  };
+  // Save to MY jobs
+  addToMyJobs(job);
+  // Save to SHARED jobs (visible to all users of the tool)
+  addToSharedJobs(job);
+  // Log to Google Sheet immediately
+  await logToSheet(job);
+  // Update chip UI
+  document.querySelectorAll('[id^="lvc-"]').forEach(c=>{c.style.opacity='.4';c.classList.remove('active');});
+  const chip=document.getElementById('lvc-'+idx);
+  if(chip){chip.classList.add('active');chip.style.opacity='1';}
+  document.getElementById('lstatus').textContent=`Launching ${idx+1}/${launchQ.length}: ${item.vname}`;
+  localStorage.setItem('vs_pending',JSON.stringify({jid,vid:item.vid,vname:item.vname}));
+  window.open(PFURL,'_blank','noopener');
+  toast(`Opened PocketFM for ${item.vname} — Submit there`,'i');
+}
+
+/* ══ STORAGE — TWO LAYERS ══ */
+// Layer 1: My own jobs (per user, full data)
+function addToMyJobs(job){
+  const k=myJobsKey();
+  const existing=JSON.parse(localStorage.getItem(k)||'[]');
+  existing.unshift(job);
+  localStorage.setItem(k,JSON.stringify(existing));
+  jobs=existing;updBadge();
+}
+function loadJobs(){jobs=JSON.parse(localStorage.getItem(myJobsKey())||'[]');updBadge();}
+function saveMyJobs(){localStorage.setItem(myJobsKey(),JSON.stringify(jobs));updBadge();}
+
+// Layer 2: Global shared jobs (all users — lightweight, for cross-user tracking)
+function addToSharedJobs(job){
+  const existing=getSharedJobs();
+  // Only add if not already there
+  if(!existing.find(j=>j.id===job.id)){
+    existing.unshift({
+      id:job.id,taskId:null,uid:job.uid,userName:job.userName,
+      voiceId:job.voiceId,voiceName:job.voiceName,vendor:job.vendor,lang:job.lang,
+      tags:job.tags,status:job.status,outputUrl:null,sheetLogged:job.sheetLogged,
+      createdAt:job.createdAt,updatedAt:job.updatedAt
+    });
+    // Keep max 1000 shared entries
+    localStorage.setItem(SHARED_KEY,JSON.stringify(existing.slice(0,1000)));
+  }
+}
+function getSharedJobs(){return JSON.parse(localStorage.getItem(SHARED_KEY)||'[]');}
+function updateSharedJob(job){
+  const shared=getSharedJobs();
+  const i=shared.findIndex(j=>j.id===job.id);
+  if(i>=0){shared[i]={...shared[i],status:job.status,taskId:job.taskId,outputUrl:job.outputUrl,updatedAt:job.updatedAt,sheetLogged:job.sheetLogged};}
+  localStorage.setItem(SHARED_KEY,JSON.stringify(shared));
+}
+
+function updBadge(){const n=jobs.filter(j=>j.status==='ready').length;const b=document.getElementById('rbadge');b.textContent=n;b.style.display=n>0?'inline':'none';}
+
+/* ══ SOURCE TOGGLE ══ */
+function setSrc(v){
+  viewSrc=v;
+  document.getElementById('src-mine').classList.toggle('on',v==='mine');
+  document.getElementById('src-all').classList.toggle('on',v==='all');
+  renderTFR();renderJobs();
+}
+function getDisplayJobs(){
+  const uid=auth.uid||'local';
+  if(viewSrc==='mine') return jobs.filter(j=>j.uid===uid);
+  // All = my jobs + shared jobs from others
+  const shared=getSharedJobs().filter(j=>j.uid!==uid);
+  return[...jobs.filter(j=>j.uid===uid),...shared];
+}
+
+/* ══ GOOGLE SHEETS ══ */
+async function ensureSheetHeaders(){
+  const tok=auth.usertoken;const sid=SHEET_ID;const sn=SHEET_NAME;
+  if(!tok)return false;
+  try{
+    const mr=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}?fields=sheets.properties.title`,{headers:{'Authorization':'Bearer '+tok}});
+    if(!mr.ok)return false;
+    const meta=await mr.json();
+    const names=(meta.sheets||[]).map(s=>s.properties.title);
+    if(!names.includes(sn)){
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}:batchUpdate`,{method:'POST',headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({requests:[{addSheet:{properties:{title:sn}}}]})});
+    }
+    const rr=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}/values/${encodeURIComponent(sn)}!A1:P1`,{headers:{'Authorization':'Bearer '+tok}});
+    const rd=await rr.json();
+    if(!rd.values?.[0]?.[0]){
+      const headers=[['Job ID','User Name','User Email','Voice Name','Voice ID','Vendor','Language','Status','Tags','Task ID','Output URL','Model','Speed','Stability','Enhance Audio','Launched At','Script Preview']];
+      await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}/values/${encodeURIComponent(sn)}!A1:Q1?valueInputOption=RAW`,{method:'PUT',headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({values:headers})});
+    }
+    return true;
+  }catch(e){return false;}
+}
+
+async function logToSheet(job){
+  const tok=auth.usertoken;const sid=SHEET_ID;const sn=SHEET_NAME;
+  if(!tok||!sid)return;
+  try{
+    const row=[[
+      job.id,job.userName||'',job.userEmail||'',
+      job.voiceName,job.voiceId,job.vendor,job.lang||'en',
+      job.status,(job.tags||[]).join(', '),job.taskId||'',job.outputUrl||'',
+      job.settings?.modelId||'eleven_v3',job.settings?.speed||'',job.settings?.stability||'',
+      job.settings?.enhance_audio?'Yes':'No',
+      job.launchedAt||job.createdAt,(job.script||'').slice(0,100)
+    ]];
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}/values/${encodeURIComponent(sn)}!A:Q:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,{method:'POST',headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({values:row})});
+    job.sheetLogged=true;
+  }catch(e){}
+}
+
+async function updateSheetRow(job){
+  const tok=auth.usertoken;const sid=SHEET_ID;const sn=SHEET_NAME;
+  if(!tok||!sid||!job.id)return;
+  try{
+    const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}/values/${encodeURIComponent(sn)}!A:A`,{headers:{'Authorization':'Bearer '+tok}});
+    const d=await r.json();const rows=d.values||[];
+    const ri=rows.findIndex(r=>r[0]===job.id);if(ri<0)return;
+    // Update cols H(status), J(taskId), K(outputUrl)
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sid}/values/${encodeURIComponent(sn)}!H${ri+1}:K${ri+1}?valueInputOption=RAW`,{method:'PUT',headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({values:[[job.status,'',job.taskId||'',job.outputUrl||'']]})});
+  }catch(e){}
+}
+
+async function testSheet(){
+  const m=document.getElementById('sheet-test-msg');
+  m.textContent='Testing...';m.style.color='var(--tx3)';
+  const ok=await ensureSheetHeaders();
+  m.textContent=ok?'✓ Connected & ready!':'✗ Failed — check token (↻ Token button)';
+  m.style.color=ok?'var(--gn)':'var(--rd)';
+  if(ok)toast('✓ Sheet connected','s');
+}
+
+/* ══ POLL ══ */
+function startPoll(){clearInterval(pollTmr);pollTmr=setInterval(doPoll,30000);}
+async function doPoll(){
+  const p=jobs.filter(j=>j.taskId&&(j.status==='pending'||j.status==='processing'));
+  if(!p.length)return;let changed=false;
+  for(const job of p){
+    try{
+      const r=await fetch(`https://genai-apps.pocketfm.ai/api/tts/status/${job.taskId}`,{headers:{'Authorization':`Bearer ${auth.usertoken}`,'X-UID':auth.uid}});
+      if(r.ok){const d=await r.json();const ns=mapS(d.status);if(ns!==job.status){job.status=ns;job.outputUrl=d.output_file_url||d.output_url||job.outputUrl;job.updatedAt=new Date().toISOString();changed=true;updateSharedJob(job);updateSheetRow(job);}}
+    }catch(e){}
+  }
+  if(changed){saveMyJobs();if(document.getElementById('page-mv').classList.contains('active')){renderTFR();renderJobs();}}
+}
+function mapS(s){if(!s)return'pending';const l=s.toLowerCase();if(l.includes('complet')||l.includes('done')||l.includes('success')||l==='ready')return'ready';if(l.includes('fail')||l.includes('error'))return'failed';if(l.includes('process')||l.includes('running'))return'processing';return'pending';}
+
+async function checkJob(jid){
+  const job=jobs.find(j=>j.id===jid);if(!job)return;
+  if(job.taskId){const vd=(job.vendor||'').toLowerCase().replace(' ','_');try{const r=await fetch(`${CDN}/${job.taskId}_${vd}.mp3`,{method:'HEAD'});if(r.ok){job.outputUrl=`${CDN}/${job.taskId}_${vd}.mp3`;job.status='ready';job.updatedAt=new Date().toISOString();saveMyJobs();updateSharedJob(job);updateSheetRow(job);renderJobs();toast('✓ Audio ready!','s');return;}}catch(e){}}
+  const url=prompt(`Paste Output URL for "${job.voiceName}":`);
+  if(url?.startsWith('http')){job.outputUrl=url;job.status='ready';job.updatedAt=new Date().toISOString();saveMyJobs();updateSharedJob(job);updateSheetRow(job);renderTFR();renderJobs();toast('✓ URL saved','s');}
+}
+function setTaskId(jid){
+  const job=jobs.find(j=>j.id===jid);if(!job)return;
+  const tid=prompt(`Task ID for "${job.voiceName}" (from PocketFM site table):`);
+  if(tid?.trim()){job.taskId=tid.trim();job.status='processing';job.updatedAt=new Date().toISOString();saveMyJobs();updateSharedJob(job);updateSheetRow(job);renderJobs();toast('✓ Task ID saved','s');}
+}
+
+/* ══ TAG FILTER ══ */
+function getMVTags(){return[...new Set(getDisplayJobs().flatMap(j=>j.tags||[]).filter(Boolean))].sort();}
+function renderTFR(q=''){
+  const all=getMVTags(),row=document.getElementById('tfr');
+  const fl=q?all.filter(t=>t.toLowerCase().includes(q)):all;
+  if(!all.length){row.style.display='none';return;}
+  row.style.display='flex';
+  row.innerHTML=`<span style="font-size:11px;color:var(--tx3);font-family:var(--mo);align-self:center;margin-right:4px">🏷</span>`;
+  fl.forEach(t=>{const c=document.createElement('span');c.className='tfc'+(aTags.has(t)?' on':'');c.textContent='#'+t;c.onclick=()=>{aTags.has(t)?aTags.delete(t):aTags.add(t);c.classList.toggle('on');renderJobs();};row.appendChild(c);});
+  if(aTags.size>0){const cl=document.createElement('span');cl.className='tfc';cl.textContent='✕ clear';cl.style.color='var(--rd)';cl.onclick=()=>{aTags.clear();renderTFR();renderJobs();};row.appendChild(cl);}
+}
+function onTagSearch(){const q=(document.getElementById('tagsearch').value||'').toLowerCase();renderTFR(q);renderJobs();}
+function quickTagFilter(t){aTags.clear();aTags.add(t);renderTFR();renderJobs();}
+
+/* ══ RENDER JOBS ══ */
+function setF(f,el){sFilter=f;document.querySelectorAll('.fp').forEach(p=>p.classList.remove('on'));el.classList.add('on');renderJobs();}
+function renderJobs(){
+  loadJobs();
+  const ts=(document.getElementById('vsearch')?.value||'').toLowerCase();
+  const tid=(document.getElementById('tsearch')?.value||'').toLowerCase();
+  const tq=(document.getElementById('tagsearch')?.value||'').toLowerCase();
+  let list=getDisplayJobs();
+  if(sFilter!=='all')list=list.filter(j=>j.status===sFilter);
+  if(aTags.size>0)list=list.filter(j=>(j.tags||[]).some(t=>aTags.has(t)));
+  if(ts)list=list.filter(j=>j.voiceName?.toLowerCase().includes(ts)||j.voiceId?.toLowerCase().includes(ts)||(j.userName||'').toLowerCase().includes(ts));
+  if(tid)list=list.filter(j=>(j.taskId||'').toLowerCase().includes(tid));
+  if(tq&&!aTags.size)list=list.filter(j=>(j.tags||[]).some(t=>t.toLowerCase().includes(tq)));
+  const g=document.getElementById('jg');
+  if(!list.length){g.innerHTML=`<div class="emp"><div class="ic">🎙️</div><p>No voices found</p><small>${sFilter!=='all'||aTags.size?'Try different filters':'Launch jobs on the Generate page'}</small></div>`;return;}
+  g.innerHTML=list.map(jcard).join('');
+}
+
+function jcard(job){
+  const myUid=auth.uid||'local';
+  const isOwn=job.uid===myUid;
+  const SL={ready:'✓ Ready',processing:'⟳ Processing',pending:'· Pending',failed:'✕ Failed'};
+  const dt=new Date(job.createdAt).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  const tagsH=(job.tags||[]).map(t=>`<span class="mt" onclick="quickTagFilter('${t.replace(/'/g,"\\'")}')"> #${t}</span>`).join('');
+  const tidH=job.taskId?`<span class="mu" onclick="navigator.clipboard.writeText('${job.taskId}').then(()=>toast('Copied','s'))" title="Copy Task ID">📋 ${job.taskId.length>14?job.taskId.slice(0,14)+'…':job.taskId}</span>`:'';
+  const slH=job.sheetLogged?`<span class="slogged">📊</span>`:'';
+  const ownerH=isOwn?`<span class="own-badge">mine</span>`:`<span class="other-badge">${job.userName||'other'}</span>`;
+  const settH=job.settings?`<div style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">
+    <span class="mp">eleven_v3</span>
+    <span class="mp">spd ${job.settings.speed}</span>
+    <span class="mp">stab ${job.settings.stability}</span>
+    ${job.settings.enhance_audio?'<span class="mp" style="color:var(--gn)">✨ enhance</span>':''}
+    ${job.settings.overlay_bgm?'<span class="mp">BGM</span>':''}
+    ${job.settings.overlay_sfx?'<span class="mp">SFX</span>':''}
+  </div>`:'';
+
+  let mediaH='';
+  if(job.status==='ready'&&job.outputUrl){
+    mediaH=`<div class="aplayer" id="apl-${job.id}">
+      <div class="ap-top">
+        <button class="ap-pb" id="ap-btn-${job.id}" onclick="togglePlay('${job.id}','${job.outputUrl}',this)">▶</button>
+        <div class="ap-info">
+          <div class="ap-title">${job.voiceName} · ${job.voiceId.slice(0,12)}…</div>
+          <div class="ap-time" id="ap-time-${job.id}">0:00 / 0:00</div>
+        </div>
+        <div class="ap-acts">
+          <a href="${job.outputUrl}" download="${job.voiceName}.mp3" class="btn btn-g btn-sm" title="Download">↓ DL</a>
+          <button class="btn btn-g btn-sm" onclick="copyU('${job.outputUrl}')" title="Copy URL">⎘ URL</button>
+        </div>
+      </div>
+      <div class="ap-prog" id="ap-pw-${job.id}" onclick="seekAudio('${job.id}',event)">
+        <div class="ap-bar" id="ap-bar-${job.id}"></div>
+        <div class="ap-dot" id="ap-dot-${job.id}"></div>
+      </div>
+      <div class="ap-vol">
+        <span class="ap-vol-lbl">Vol</span>
+        <input type="range" min="0" max="100" value="100" style="width:70px" oninput="setVol('${job.id}',this.value)">
+      </div>
+    </div>`;
+  } else if(isOwn){
+    mediaH=`<div class="pactions">
+      <button class="btn btn-g btn-sm" onclick="setTaskId('${job.id}')">✎ Add Task ID</button>
+      <button class="btn btn-g btn-sm" onclick="checkJob('${job.id}')">⟳ Check / Add URL</button>
+      ${job.taskId?`<span style="font-size:10px;color:var(--tx3);font-family:var(--mo)">Task: ${job.taskId}</span>`:''}
+    </div>`;
+  }
+
+  return`<div class="jc s-${job.status}" id="jc-${job.id}">
+    <div class="jt">
+      <div style="min-width:0;flex:1">
+        <div class="jv">${job.voiceName}<small>${job.voiceId}</small></div>
+        <div class="jm">
+          <span class="vb">${job.vendor}</span>
+          <span class="mp">🌐 ${job.lang||'en'}</span>
+          ${ownerH}${slH}${tagsH}${tidH}
+          <span class="mp">🕐 ${dt}</span>
+        </div>
+        ${settH}
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+        <div class="sbadge ${job.status}">${job.status==='processing'||job.status==='pending'?'<div class="pu"></div>':''}${SL[job.status]}</div>
+      </div>
+    </div>
+    ${mediaH}
+  </div>`;
+}
+
+/* ══ AUDIO ENGINE ══ */
+function togglePlay(jid,url,btn){
+  // Pause others
+  Object.entries(audioInstances).forEach(([id,a])=>{if(id!==jid&&!a.paused){a.pause();const b=document.getElementById('ap-btn-'+id);if(b)b.textContent='▶';}});
+  if(audioInstances[jid]){const a=audioInstances[jid];if(a.paused){a.play();btn.textContent='⏸';}else{a.pause();btn.textContent='▶';}return;}
+  const audio=new Audio(url);audioInstances[jid]=audio;
+  audio.addEventListener('timeupdate',()=>{
+    const p=(audio.currentTime/audio.duration*100)||0;
+    const bar=document.getElementById('ap-bar-'+jid);const dot=document.getElementById('ap-dot-'+jid);const time=document.getElementById('ap-time-'+jid);
+    if(bar)bar.style.width=p+'%';
+    if(dot)dot.style.left=p+'%';
+    if(time)time.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration);
+  });
+  audio.addEventListener('ended',()=>{btn.textContent='▶';const bar=document.getElementById('ap-bar-'+jid);if(bar)bar.style.width='0%';});
+  audio.addEventListener('loadedmetadata',()=>{const t=document.getElementById('ap-time-'+jid);if(t)t.textContent='0:00 / '+fmt(audio.duration);});
+  audio.play().then(()=>btn.textContent='⏸').catch(()=>fetchAndPlay(jid,url,btn));
+}
+async function fetchAndPlay(jid,url,btn){
+  try{toast('Loading audio...','i');const res=await fetch(url);if(!res.ok)throw new Error('fetch failed');const blob=await res.blob();const burl=URL.createObjectURL(blob);const audio=new Audio(burl);audioInstances[jid]=audio;audio.addEventListener('timeupdate',()=>{const p=(audio.currentTime/audio.duration*100)||0;const bar=document.getElementById('ap-bar-'+jid);const dot=document.getElementById('ap-dot-'+jid);const time=document.getElementById('ap-time-'+jid);if(bar)bar.style.width=p+'%';if(dot)dot.style.left=p+'%';if(time)time.textContent=fmt(audio.currentTime)+' / '+fmt(audio.duration);});audio.addEventListener('ended',()=>{btn.textContent='▶';});audio.addEventListener('loadedmetadata',()=>{const t=document.getElementById('ap-time-'+jid);if(t)t.textContent='0:00 / '+fmt(audio.duration);});await audio.play();btn.textContent='⏸';}catch(e){toast('Cannot play audio. Download instead.','e');btn.textContent='▶';}
+}
+function seekAudio(jid,e){const a=audioInstances[jid];if(!a||!a.duration)return;const wrap=document.getElementById('ap-pw-'+jid);const rect=wrap.getBoundingClientRect();a.currentTime=((e.clientX-rect.left)/rect.width)*a.duration;}
+function setVol(jid,val){const a=audioInstances[jid];if(a)a.volume=val/100;}
+function fmt(s){if(!isFinite(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
+
+/* ══ PLAY ALL ══ */
+function playAll(){
+  Object.entries(audioInstances).forEach(([id,a])=>{if(!a.paused){a.pause();const b=document.getElementById('ap-btn-'+id);if(b)b.textContent='▶';}});
+  let ready=getDisplayJobs().filter(j=>j.status==='ready'&&j.outputUrl);
+  if(aTags.size>0)ready=ready.filter(j=>(j.tags||[]).some(t=>aTags.has(t)));
+  if(!ready.length){toast('No ready voices','i');return;}
+  paQ=ready;paIdx=0;document.getElementById('pa-t').textContent=ready.length;document.getElementById('pab').classList.add('show');paNext();
+}
+function paNext(){if(paIdx>=paQ.length){stopPA();return;}const job=paQ[paIdx];document.getElementById('pa-v').textContent=job.voiceName;document.getElementById('pa-i').textContent=paIdx+1;if(paAudio){paAudio.pause();paAudio=null;}paAudio=new Audio(job.outputUrl);paAudio.addEventListener('timeupdate',()=>{document.getElementById('pa-p').style.width=((paAudio.currentTime/paAudio.duration*100)||0)+'%';});paAudio.addEventListener('ended',()=>{paIdx++;paNext();});paAudio.play().catch(async()=>{try{const res=await fetch(job.outputUrl);const blob=await res.blob();paAudio=new Audio(URL.createObjectURL(blob));paAudio.addEventListener('ended',()=>{paIdx++;paNext();});await paAudio.play();document.getElementById('patog').textContent='⏸';}catch(e){paIdx++;paNext();}});document.getElementById('patog').textContent='⏸';}
+function togglePA(){if(!paAudio)return;if(paAudio.paused){paAudio.play();document.getElementById('patog').textContent='⏸';}else{paAudio.pause();document.getElementById('patog').textContent='▶';}}
+function stopPA(){if(paAudio){paAudio.pause();paAudio=null;}document.getElementById('pab').classList.remove('show');}
+
+/* ══ UTILS ══ */
+function copyU(u){navigator.clipboard.writeText(u).then(()=>toast('URL copied','s')).catch(()=>toast('Failed','e'));}
+function exportJobs(){const all=[...jobs,...getSharedJobs()];const unique=[...new Map(all.map(j=>[j.id,j])).values()];const b=new Blob([JSON.stringify(unique,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='voice_studio_all_jobs.json';a.click();}
+function toast(msg,t='i'){const c=document.getElementById('tc');const el=document.createElement('div');el.className=`toast ${t}`;el.innerHTML=`<span>${{s:'✓',e:'✕',i:'ℹ'}[t]}</span><span>${msg}</span>`;c.appendChild(el);setTimeout(()=>el.remove(),3500);}
+</script>
+</body>
+</html>
