@@ -275,10 +275,43 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:var(--sf);}
 ::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
+
+/* ── UK TEAM TOOLKIT TOP BANNER ── */
+.uk-banner{background:linear-gradient(90deg,#1a1040,#2d1f6e,#1a1040);border-bottom:2px solid #7c6dfa;padding:8px 22px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;width:100%;}
+.uk-banner-l{display:flex;align-items:center;gap:10px;}
+.uk-flag{font-size:18px;}
+.uk-title{font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#fff;}
+.uk-subtitle{font-size:10px;color:#a594ff;font-family:'DM Mono',monospace;letter-spacing:.06em;}
+.uk-badge{background:#7c6dfa;color:#fff;font-size:9px;font-weight:700;padding:2px 9px;border-radius:10px;letter-spacing:.1em;text-transform:uppercase;}
+.watermark{position:fixed;bottom:12px;right:16px;font-size:9px;font-family:'DM Mono',monospace;color:rgba(165,148,255,.22);pointer-events:none;z-index:9999;letter-spacing:.05em;text-align:right;line-height:1.6;}
+.wrap{display:flex;flex-direction:column;min-height:100vh;position:relative;z-index:1;}
+.tid-search-card{background:linear-gradient(135deg,rgba(124,109,250,.08),rgba(165,148,255,.04));border:1px solid #7c6dfa;border-radius:10px;padding:14px 18px;margin-bottom:13px;}
+.tid-search-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.tid-si{background:#18181f;border:1px solid #2a2a38;border-radius:6px;color:#e8e8f0;font-family:'DM Mono',monospace;font-size:13px;padding:9px 14px;outline:none;flex:1;min-width:200px;}
+.tid-si:focus{border-color:#7c6dfa;box-shadow:0 0 0 2px rgba(124,109,250,.2);}
+.tid-results{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+.tid-row{background:#18181f;border:1px solid #2a2a38;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.tid-row.found{border-color:#2dd98a;background:rgba(45,217,138,.08);}
+.tid-row.notfound{border-color:#ff5757;background:rgba(255,87,87,.08);}
+.tid-info{font-size:12px;font-family:'DM Mono',monospace;flex:1;}
+.tid-status{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:4px;}
+.tid-status.found{background:rgba(45,217,138,.15);color:#2dd98a;}
+.tid-status.notfound{background:rgba(255,87,87,.12);color:#ff5757;}
 </style>
 </head>
 <body>
 <div id="tc"></div>
+<div class="wrap">
+<div class="uk-banner">
+  <div class="uk-banner-l">
+    <span class="uk-flag">🇬🇧</span>
+    <div>
+      <div class="uk-title">UK Team Tool Kit</div>
+      <div class="uk-subtitle">PocketFM · Voice Studio · TTS Dashboard</div>
+    </div>
+  </div>
+  <span class="uk-badge">Internal Tool</span>
+</div>
 <div class="shell">
 
 <!-- SIDEBAR -->
@@ -556,6 +589,18 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
         <a href="https://docs.google.com/spreadsheets/d/19YcUmDDAuNAA7zttPqZE-d-R5RtV-fCyqGhHHWtSQ_8/edit" target="_blank" class="btn btn-g btn-sm">📊 Sheet</a>
       </div>
     </div>
+  </div>
+
+  <!-- TASK ID SEARCH -->
+  <div class="tid-search-card">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#5a5a72;margin-bottom:10px;">🔎 Task ID Lookup → Auto-Log to Sheet</div>
+    <div style="font-size:12px;color:#9090a8;margin-bottom:10px;">Paste Task IDs (comma or newline separated) — found jobs get logged to sheet automatically.</div>
+    <div class="tid-search-row">
+      <input type="text" class="tid-si" id="tid-bulk-input" placeholder="e.g. abc123, def456, ghi789...">
+      <button type="button" class="btn btn-p btn-sm" onclick="searchTaskIds()">🔍 Search & Log</button>
+      <button type="button" class="btn btn-g btn-sm" onclick="document.getElementById('tid-bulk-input').value='';document.getElementById('tid-results').innerHTML=''">✕ Clear</button>
+    </div>
+    <div class="tid-results" id="tid-results"></div>
   </div>
 
   <!-- TOOLBAR -->
@@ -1120,5 +1165,7 @@ function copyU(u){navigator.clipboard.writeText(u).then(()=>toast('URL copied','
 function exportJobs(){const all=[...jobs,...getSharedJobs()];const unique=[...new Map(all.map(j=>[j.id,j])).values()];const b=new Blob([JSON.stringify(unique,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='voice_studio_all_jobs.json';a.click();}
 function toast(msg,t='i'){const c=document.getElementById('tc');const el=document.createElement('div');el.className=`toast ${t}`;el.innerHTML=`<span>${{s:'✓',e:'✕',i:'ℹ'}[t]}</span><span>${msg}</span>`;c.appendChild(el);setTimeout(()=>el.remove(),3500);}
 </script>
+<div class="watermark">Developed By Mayank Mandal<br>UK Team · PocketFM</div>
+</div><!-- /wrap -->
 </body>
 </html>
