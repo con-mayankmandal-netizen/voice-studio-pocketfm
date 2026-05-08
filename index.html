@@ -311,7 +311,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   <div class="spill" id="auth-pill">
     <div class="dot" id="auth-dot"></div>
     <span id="auth-msg" style="flex:1">Checking auth...</span>
-    <button class="btn btn-g btn-sm" style="padding:3px 8px;font-size:10px" onclick="showPanel('rp')">↻ Token</button>
+    <button type="button" class="btn btn-g btn-sm" style="padding:3px 8px;font-size:10px" onclick="showPanel('rp')">↻ Token</button>
   </div>
   <div class="spill ok" id="sheets-pill">
     <div class="dot ok"></div>
@@ -334,8 +334,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
   </div>
   <div class="pinp">
     <input type="text" id="new-tok" placeholder="Paste new usertoken...">
-    <button class="btn btn-p btn-sm" onclick="saveToken()">Save</button>
-    <button class="btn btn-g btn-sm" onclick="hidePanel('rp')">✕</button>
+    <button type="button" class="btn btn-p btn-sm" onclick="saveToken()">Save</button>
+    <button type="button" class="btn btn-g btn-sm" onclick="hidePanel('rp')">✕</button>
   </div>
 </div>
 
@@ -360,7 +360,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       <div class="finfo" id="fi">
         <span style="color:var(--gn)">✓</span>
         <span class="fname" id="fn">—</span>
-        <button class="btn btn-g btn-sm" onclick="clearFile()">Remove</button>
+        <button type="button" class="btn btn-g btn-sm" onclick="clearFile()">Remove</button>
       </div>
     </div>
     <div class="field">
@@ -531,14 +531,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <div class="lbox-d">Click <strong>Launch All</strong> → PocketFM opens for each voice. Select voice, paste script, click Submit there. Come back → <strong>Next Voice</strong>.</div>
     <div class="lv-chips" id="lv-chips"></div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-      <button class="lbtn" id="lbtn" onclick="launchAll()">🚀 Launch All on PocketFM</button>
-      <button class="btn btn-g btn-sm" id="lnext" style="display:none" onclick="launchNext()">→ Next Voice</button>
+      <button type="button" class="lbtn" id="lbtn" onclick="launchAll()">🚀 Launch All on PocketFM</button>
+      <button type="button" class="btn btn-g btn-sm" id="lnext" style="display:none" onclick="launchNext()">→ Next Voice</button>
       <span id="lstatus" style="font-size:11px;color:var(--tx3);font-family:var(--mo)"></span>
     </div>
   </div>
 
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:40px">
-    <button class="btn btn-p" id="prepbtn" onclick="prepLaunch()"><span id="preplbl">▶ Prepare Launch</span></button>
+    <button type="button" class="btn btn-p" id="prepbtn" onclick="prepLaunch()"><span id="preplbl">▶ Prepare Launch</span></button>
     <span id="prepinfo" style="font-size:12px;color:var(--tx3);font-family:var(--mo)"></span>
   </div>
 </div>
@@ -552,7 +552,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
         <div class="ps">All jobs tracked · audio player · click tag to filter · auto-polls every 30s</div>
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
-        <button class="btn btn-g btn-sm" onclick="playAll()">▶ Play All</button>
+        <button type="button" class="btn btn-g btn-sm" onclick="playAll()">▶ Play All</button>
         <a href="https://docs.google.com/spreadsheets/d/19YcUmDDAuNAA7zttPqZE-d-R5RtV-fCyqGhHHWtSQ_8/edit" target="_blank" class="btn btn-g btn-sm">📊 Sheet</a>
       </div>
     </div>
@@ -560,18 +560,18 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 
   <!-- TOOLBAR -->
   <div class="vtool">
-    <button class="fp on" onclick="setF('all',this)">All</button>
-    <button class="fp" onclick="setF('ready',this)">✓ Ready</button>
-    <button class="fp" onclick="setF('processing',this)">⟳ Processing</button>
-    <button class="fp" onclick="setF('pending',this)">· Pending</button>
-    <button class="fp" onclick="setF('failed',this)">✕ Failed</button>
+    <button type="button" class="fp on" onclick="setF('all',this)">All</button>
+    <button type="button" class="fp" onclick="setF('ready',this)">✓ Ready</button>
+    <button type="button" class="fp" onclick="setF('processing',this)">⟳ Processing</button>
+    <button type="button" class="fp" onclick="setF('pending',this)">· Pending</button>
+    <button type="button" class="fp" onclick="setF('failed',this)">✕ Failed</button>
     <input class="sbox" id="vsearch" placeholder="🔍 name / voice..." oninput="renderJobs()">
     <input class="tidbox" id="tsearch" placeholder="🔎 Task ID..." oninput="renderJobs()">
     <input class="tagsbox" id="tagsearch" placeholder="🏷 tag..." oninput="onTagSearch()">
     <!-- Mine / All users toggle -->
     <div class="src-tog">
-      <button class="src-btn on" id="src-mine" onclick="setSrc('mine')">Mine</button>
-      <button class="src-btn" id="src-all" onclick="setSrc('all')">All Users</button>
+      <button type="button" class="src-btn on" id="src-mine" onclick="setSrc('mine')">Mine</button>
+      <button type="button" class="src-btn" id="src-all" onclick="setSrc('all')">All Users</button>
     </div>
   </div>
 
@@ -591,7 +591,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
     <div class="ct">PocketFM Auth</div>
     <div class="field"><div class="fl">UID <span class="sub">(permanent)</span></div><input type="text" id="set-uid" placeholder="uid"></div>
     <div class="field"><div class="fl">User Token <span class="sub">(expires ~hourly)</span></div><input type="text" id="set-tok" placeholder="usertoken"></div>
-    <button class="btn btn-p btn-sm" style="margin-top:8px" onclick="saveSettingsAuth()">Save Auth</button>
+    <button type="button" class="btn btn-p btn-sm" style="margin-top:8px" onclick="saveSettingsAuth()">Save Auth</button>
   </div>
   <div class="card">
     <div class="ct">Google Sheets</div>
@@ -599,12 +599,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
       Pre-configured to log all jobs to:<br>
       <a href="https://docs.google.com/spreadsheets/d/19YcUmDDAuNAA7zttPqZE-d-R5RtV-fCyqGhHHWtSQ_8/edit" target="_blank" style="color:var(--ac2);font-family:var(--mo);font-size:11px">19YcUmDDAuNAA7zttPqZE-d-R5RtV-fCyqGhHHWtSQ_8</a>
     </p>
-    <button class="btn btn-g btn-sm" onclick="testSheet()">Test Connection</button>
+    <button type="button" class="btn btn-g btn-sm" onclick="testSheet()">Test Connection</button>
     <span id="sheet-test-msg" style="font-size:11px;font-family:var(--mo);color:var(--tx3);margin-left:10px"></span>
   </div>
   <div class="card">
     <div class="ct">Data Export</div>
-    <button class="btn btn-g btn-sm" onclick="exportJobs()">⬇ Export All Jobs JSON</button>
+    <button type="button" class="btn btn-g btn-sm" onclick="exportJobs()">⬇ Export All Jobs JSON</button>
   </div>
 </div>
 
@@ -613,10 +613,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;heigh
 
 <!-- PLAY ALL BAR -->
 <div id="pab">
-  <button class="ap-pb" onclick="togglePA()" id="patog" style="width:28px;height:28px;font-size:10px">▶</button>
+  <button type="button" class="ap-pb" onclick="togglePA()" id="patog" style="width:28px;height:28px;font-size:10px">▶</button>
   <div class="pai"><strong id="pa-v">—</strong><div>Playing <span id="pa-i">0</span>/<span id="pa-t">0</span></div></div>
   <div style="width:100px;height:3px;background:var(--b);border-radius:2px"><div id="pa-p" style="height:100%;background:var(--ac);border-radius:2px;width:0%"></div></div>
-  <button class="btn btn-g btn-sm" onclick="stopPA()">■ Stop</button>
+  <button type="button" class="btn btn-g btn-sm" onclick="stopPA()">■ Stop</button>
 </div>
 
 <script>
@@ -782,7 +782,7 @@ function onTKey(e){if(e.key==='Enter'||e.key===','){e.preventDefault();addFT(e.t
 function onTType(e){if(e.target.value.endsWith(',')){addFT(e.target.value.slice(0,-1).trim());e.target.value='';}}
 function addFT(v){if(v&&!fTags.includes(v)){fTags.push(v);renderFT();renderTagQS();}}
 function remFT(i){fTags.splice(i,1);renderFT();}
-function renderFT(){const tw=document.getElementById('tw'),ti=document.getElementById('tag-in')||document.getElementById('tin');tw.innerHTML='';fTags.forEach((t,i)=>{const p=document.createElement('div');p.className='tp';p.innerHTML=`${t}<button onclick="remFT(${i})">×</button>`;tw.appendChild(p);});tw.appendChild(document.getElementById('tin'));}
+function renderFT(){const tw=document.getElementById('tw'),ti=document.getElementById('tag-in')||document.getElementById('tin');tw.innerHTML='';fTags.forEach((t,i)=>{const p=document.createElement('div');p.className='tp';p.innerHTML=`${t}<button type="button" onclick="remFT(${i})">×</button>`;tw.appendChild(p);});tw.appendChild(document.getElementById('tin'));}
 function getAllTags(){const s=new Set();[...JSON.parse(localStorage.getItem(myJobsKey())||'[]'),...getSharedJobs()].forEach(j=>(j.tags||[]).forEach(t=>{if(t)s.add(t);}));return[...s].sort();}
 function renderTagQS(){const all=getAllTags(),w=document.getElementById('tqs');if(!all.length){w.style.display='none';return;}w.style.display='block';document.getElementById('tqs-row').innerHTML=all.map(t=>`<span class="tqchip ${fTags.includes(t)?'on':''}" onclick="tqT('${t.replace(/'/g,"\\'")}','this')">#${t}</span>`).join('');}
 function tqT(t){fTags.includes(t)?fTags.splice(fTags.indexOf(t),1):fTags.push(t);renderFT();renderTagQS();}
@@ -1032,14 +1032,14 @@ function jcard(job){
   if(job.status==='ready'&&job.outputUrl){
     mediaH=`<div class="aplayer" id="apl-${job.id}">
       <div class="ap-top">
-        <button class="ap-pb" id="ap-btn-${job.id}" onclick="togglePlay('${job.id}','${job.outputUrl}',this)">▶</button>
+        <button type="button" class="ap-pb" id="ap-btn-${job.id}" onclick="togglePlay('${job.id}','${job.outputUrl}',this)">▶</button>
         <div class="ap-info">
           <div class="ap-title">${job.voiceName} · ${job.voiceId.slice(0,12)}…</div>
           <div class="ap-time" id="ap-time-${job.id}">0:00 / 0:00</div>
         </div>
         <div class="ap-acts">
           <a href="${job.outputUrl}" download="${job.voiceName}.mp3" class="btn btn-g btn-sm" title="Download">↓ DL</a>
-          <button class="btn btn-g btn-sm" onclick="copyU('${job.outputUrl}')" title="Copy URL">⎘ URL</button>
+          <button type="button" class="btn btn-g btn-sm" onclick="copyU('${job.outputUrl}')" title="Copy URL">⎘ URL</button>
         </div>
       </div>
       <div class="ap-prog" id="ap-pw-${job.id}" onclick="seekAudio('${job.id}',event)">
@@ -1053,8 +1053,8 @@ function jcard(job){
     </div>`;
   } else if(isOwn){
     mediaH=`<div class="pactions">
-      <button class="btn btn-g btn-sm" onclick="setTaskId('${job.id}')">✎ Add Task ID</button>
-      <button class="btn btn-g btn-sm" onclick="checkJob('${job.id}')">⟳ Check / Add URL</button>
+      <button type="button" class="btn btn-g btn-sm" onclick="setTaskId('${job.id}')">✎ Add Task ID</button>
+      <button type="button" class="btn btn-g btn-sm" onclick="checkJob('${job.id}')">⟳ Check / Add URL</button>
       ${job.taskId?`<span style="font-size:10px;color:var(--tx3);font-family:var(--mo)">Task: ${job.taskId}</span>`:''}
     </div>`;
   }
